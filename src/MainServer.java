@@ -8,6 +8,8 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainServer extends Thread {
     private int[][] arr ;
@@ -18,6 +20,7 @@ public class MainServer extends Thread {
     private int rows;
     private int columns;
     private int threadsInited;
+    private boolean isReady  = false;
     public MainServer(int threads,int [][]arr){
         columns = arr[0].length;
         rows= arr.length;
@@ -28,6 +31,7 @@ public class MainServer extends Thread {
 
         colForFThread = columns/threads + columns%threads;
         colForThread = columns/threads;
+        isReady=true;
     }
 
     @Override
@@ -82,13 +86,25 @@ public class MainServer extends Thread {
                         ByteBuffer ioBuffer = ByteBuffer.allocate((colForFThread*4)+(rows*(colForThread+1)*4)+(4*2));
                         ioClient.read(ioBuffer);
                         String result = new String(ioBuffer.array()).trim();
-                        if (result.equals("start")) {
-                            System.out.println("Started");
-                            sendData(ioClient,ioBuffer);
+                        Pattern p = Pattern.compile("start");
+                        Matcher m = p.matcher(result);
+
+                        if (m.find()) {
+
+
+                            p = Pattern.compile("[0-9]");
+                            m = p.matcher(result);
+                            int port=0;
+                            String myPort = new String();
+                            while (m.find()){
+                                myPort+=m.group();
+                            }
+                            port+=Integer.parseInt(myPort);
+
+                            sendData(port);
                         }
                         else {
-                            System.out.println("Try to get back");
-                            System.out.println("The reserved"+ioBuffer.limit());
+
                             getData(ioClient, ioBuffer);
                             if(getedCol==this.columns){
                                 ioSocket.close();
@@ -110,6 +126,22 @@ public class MainServer extends Thread {
         if(columns==getedCol)return arr;
         return null;
     }
+    private  void sendData(int port){
+        try {
+            InetSocketAddress socketAddress = new InetSocketAddress("localhost", port);
+            SocketChannel ioClient = SocketChannel.open(socketAddress);
+     //       ioClient.configureBlocking(false);
+
+            sendData(ioClient,null);
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+
+    }
+    public boolean getInitState(){
+        return isReady;
+    }
     private  void getData(SocketChannel ioClient,ByteBuffer ioBuffer){
         try {
 
@@ -117,17 +149,13 @@ public class MainServer extends Thread {
             int length = ioBuffer.getInt(4);
 
             int size = 8 + (columns * length * 4) + columns * 4;
-            System.out.printf("col:%d\tlen:%d\tsize:%d\n",columns,length,size);
+
             int colTarget = 0;
             for (int i = 8; i < size; i += 4 * (length + 1)) {
                 for (int j = 0; j < length + 1; j++) {
                     if (j == 0) colTarget = ioBuffer.getInt(i);
                     else {
-                        System.out.println("i:"+i+" j:"+(j-1)+"\tcol"+colTarget+
-                        "\tbitIndex"+(i+(j*4)));
-                       // arr[j - 1][colTarget] = ioBuffer.getInt(i + (j * 4));
-                        //arr[j-1][colTarget]=0;
-                        System.out.println(   ioBuffer.getInt(i+(j*4)));
+                        arr[j-1][colTarget]=   ioBuffer.getInt(i+(j*4));
                     }
                 }
                 getedCol++;
@@ -163,9 +191,17 @@ public class MainServer extends Thread {
                 size =(colForThread*4)+(rows*colForThread*4)+(4*2);
                 limit = colForThread;
             }
+
+            byte []toSendSize=  ByteBuffer.allocate(4).putInt(size).array();
+
+
+            ioClient.write(ByteBuffer.wrap(toSendSize));
+
+           // Thread.sleep(size/1000);
             int z = 0;
             //инициализация массива
             arrB = new byte[size];
+
             //Записываем число колонок для потока
             for(byte bCol:colNumBuf){
                 arrB[z]=bCol;
@@ -195,9 +231,10 @@ public class MainServer extends Thread {
                 }
                 colSended++;
             }
-            int numBytesWritten = ioClient.write(ByteBuffer.wrap(arrB));
 
-            ioBuffer.clear();
+            ioClient.write(ByteBuffer.allocate(4).putInt(size));
+            int numBytesWritten = ioClient.write(ByteBuffer.wrap(arrB));
+            if(ioBuffer!=null) ioBuffer.clear();
             ioClient.close();
             threadsInited++;
         }
