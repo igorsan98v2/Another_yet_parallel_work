@@ -36,11 +36,14 @@ public class ClientThread extends Thread{
             Matcher m = pattern.matcher(s);
 
             int port=1111;
-
-            if(m.find()) port+=Integer.parseInt( m.group());
+            String num = new String();
+            while (m.find()){
+                num +=m.group();
+            }
+            port+=Integer.parseInt( num);
 
           //  int port =1111+( LocalDateTime.now().getNano()/10000 -LocalDateTime.now().getNano()/10000)*-1;
-            Thread.sleep(100);
+            Thread.sleep(50);
             InetSocketAddress socketAddress = new InetSocketAddress("localhost", 1111);
             ioClient = SocketChannel.open(socketAddress);
             ioClient.configureBlocking(false);
@@ -146,7 +149,9 @@ public class ClientThread extends Thread{
                             ByteBuffer buffer = ByteBuffer.allocate(size);
                             int read=0;
                             try {
-                                Thread.sleep(size/1000);
+                                
+                                Thread.sleep(size/10000);
+
                                  read  =  ioClient.read(buffer);
 
 
@@ -205,6 +210,8 @@ public class ClientThread extends Thread{
             }
         }
         catch (IOException e){
+            log(this.getName()+"port"+port);
+
             e.printStackTrace();
         }
 

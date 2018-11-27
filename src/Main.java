@@ -8,19 +8,22 @@ public class Main {
     public static void main(String[] args) {
 
         matrix = new Matrix(600,600);
+        int []threads ={1,2,4,8};
         try {
 
+            for(int j=0;j<10;j++){
+                for(int i:threads) {
+                    Thread.sleep(1000);
+                    long start = System.currentTimeMillis();
+                    sort(i);
+                    long end = System.currentTimeMillis();
+                    System.out.printf("Sorted by this time %.2f`s using threads:%d\n", (end - start) / 1000.0f,i);
+                }
+            }
 
-                
-                long start = System.currentTimeMillis();
-                Thread.sleep(200);
-                sort(2);
-                long end = System.currentTimeMillis();
-
-                System.out.printf("Sorted by this time %f", (end - start) / 100.0f);
 
         }
-        catch (InterruptedException e){
+        catch (Exception e){
             e.printStackTrace();
         }
         Matrix matrixSorted = new Matrix(mainServer.getArr());
