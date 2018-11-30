@@ -135,10 +135,8 @@ public class ClientThread extends Thread{
                     // Tests whether this key's channel is ready to accept a new socket connection
                     if (myKey.isAcceptable()) {
                         SocketChannel ioClient = ioSocket.accept();
-
                         // Adjusts this channel's blocking mode to false
                         ioClient.configureBlocking(false);
-
                         // Operation-set bit for read operations
                         ioClient.register(selector, SelectionKey.OP_READ);
 
@@ -149,12 +147,8 @@ public class ClientThread extends Thread{
                             ByteBuffer buffer = ByteBuffer.allocate(size);
                             int read=0;
                             try {
-                                
-                                Thread.sleep(size/10000);
-
+                                 Thread.sleep(size/10000);
                                  read  =  ioClient.read(buffer);
-
-
 
                             }
                             catch (InterruptedException e){

@@ -100,7 +100,12 @@ public class MainServer extends Thread {
                                 myPort+=m.group();
                             }
                             port+=Integer.parseInt(myPort);
-
+                            try {
+                                Thread.sleep(2);//Время на разверту сервера
+                            }
+                            catch (InterruptedException e){
+                                e.printStackTrace();
+                            }
                             sendData(port);
                         }
                         else {

@@ -7,11 +7,12 @@ public class Main {
     private static MainServer mainServer;
     public static void main(String[] args) {
 
-        matrix = new Matrix(600,600);
-        int []threads ={1,2,4,8};
+        matrix = new Matrix(800,800);
+        int []threads ={1,2,4,8,16,32,80};
         try {
 
-            for(int j=0;j<10;j++){
+            for(int j=0;j<3;j++){
+                System.out.println("Stage-"+(j+1));
                 for(int i:threads) {
                     Thread.sleep(1000);
                     long start = System.currentTimeMillis();
